@@ -2,14 +2,13 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/nadirbasalamah/go-simple-inventory/routes"
 )
 
 func main() {
 	var app *fiber.App = fiber.New()
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("hello world!")
-	})
+	routes.SetupRoutes(app)
 
 	app.Listen(":3000")
 }
