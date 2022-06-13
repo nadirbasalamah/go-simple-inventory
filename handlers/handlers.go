@@ -46,6 +46,16 @@ func CreateItem(c *fiber.Ctx) error {
 		})
 	}
 
+	errors := itemInput.ValidateStruct()
+
+	if errors != nil {
+		return c.Status(http.StatusBadRequest).JSON(models.Response[[]*models.ErrorResponse]{
+			Success: false,
+			Message: "validation failed",
+			Data:    errors,
+		})
+	}
+
 	var createdItem models.Item = services.CreateItem(*itemInput)
 
 	return c.Status(http.StatusCreated).JSON(models.Response[models.Item]{
@@ -62,6 +72,16 @@ func UpdateItem(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(models.Response[any]{
 			Success: false,
 			Message: err.Error(),
+		})
+	}
+
+	errors := itemInput.ValidateStruct()
+
+	if errors != nil {
+		return c.Status(http.StatusBadRequest).JSON(models.Response[[]*models.ErrorResponse]{
+			Success: false,
+			Message: "validation failed",
+			Data:    errors,
 		})
 	}
 
