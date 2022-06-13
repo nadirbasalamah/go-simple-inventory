@@ -11,8 +11,10 @@ import (
 func GetAllItems(c *fiber.Ctx) error {
 	var items []models.Item = services.GetAllItems()
 
-	return c.JSON(fiber.Map{
-		"items": items,
+	return c.JSON(models.Response[[]models.Item]{
+		Success: true,
+		Message: "All items data",
+		Data:    items,
 	})
 }
 
@@ -21,13 +23,16 @@ func GetItemByID(c *fiber.Ctx) error {
 
 	item, err := services.GetItemByID(itemID)
 	if err != nil {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
-			"error": err.Error(),
+		return c.Status(http.StatusNotFound).JSON(models.Response[any]{
+			Success: false,
+			Message: err.Error(),
 		})
 	}
 
-	return c.JSON(fiber.Map{
-		"item": item,
+	return c.JSON(models.Response[models.Item]{
+		Success: true,
+		Message: "item found",
+		Data:    item,
 	})
 }
 
@@ -35,15 +40,18 @@ func CreateItem(c *fiber.Ctx) error {
 	var itemInput *models.ItemRequest = new(models.ItemRequest)
 
 	if err := c.BodyParser(itemInput); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+		return c.Status(http.StatusBadRequest).JSON(models.Response[any]{
+			Success: false,
+			Message: err.Error(),
 		})
 	}
 
 	var createdItem models.Item = services.CreateItem(*itemInput)
 
-	return c.JSON(fiber.Map{
-		"item": createdItem,
+	return c.Status(http.StatusCreated).JSON(models.Response[models.Item]{
+		Success: true,
+		Message: "item created",
+		Data:    createdItem,
 	})
 }
 
@@ -51,8 +59,9 @@ func UpdateItem(c *fiber.Ctx) error {
 	var itemInput *models.ItemRequest = new(models.ItemRequest)
 
 	if err := c.BodyParser(itemInput); err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+		return c.Status(http.StatusBadRequest).JSON(models.Response[any]{
+			Success: false,
+			Message: err.Error(),
 		})
 	}
 
@@ -60,13 +69,16 @@ func UpdateItem(c *fiber.Ctx) error {
 
 	updatedItem, err := services.UpdateItem(*itemInput, itemID)
 	if err != nil {
-		return c.Status(http.StatusNotFound).JSON(fiber.Map{
-			"error": err.Error(),
+		return c.Status(http.StatusNotFound).JSON(models.Response[any]{
+			Success: false,
+			Message: err.Error(),
 		})
 	}
 
-	return c.JSON(fiber.Map{
-		"item": updatedItem,
+	return c.JSON(models.Response[models.Item]{
+		Success: true,
+		Message: "item updated",
+		Data:    updatedItem,
 	})
 }
 
@@ -76,12 +88,14 @@ func DeleteItem(c *fiber.Ctx) error {
 	var result bool = services.DeleteItem(itemID)
 
 	if result {
-		return c.JSON(fiber.Map{
-			"message": "item deleted successfully",
+		return c.JSON(models.Response[any]{
+			Success: true,
+			Message: "item deleted",
 		})
 	}
 
-	return c.Status(http.StatusNotFound).JSON(fiber.Map{
-		"message": "item failed to delete",
+	return c.Status(http.StatusNotFound).JSON(models.Response[any]{
+		Success: false,
+		Message: "item failed to delete",
 	})
 }
