@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 
+	"github.com/nadirbasalamah/go-simple-inventory/models"
 	"github.com/nadirbasalamah/go-simple-inventory/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -30,4 +31,6 @@ func InitDatabase() {
 	}
 
 	fmt.Println("Connected to the database")
+
+	DB.AutoMigrate(&models.User{}, &models.Item{})
 }
