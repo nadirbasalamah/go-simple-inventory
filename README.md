@@ -34,3 +34,24 @@ CREATE DATABASE inventory;
 ```
 go run main.go
 ```
+
+
+## How to Build with Docker
+
+1. Build the application's image.
+
+```
+docker compose build
+```
+
+2. Run the application.
+
+```
+docker compose up -d
+```
+
+3. Stop the application.
+
+```
+docker compose down
+```
