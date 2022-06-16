@@ -23,10 +23,10 @@ go run main.go
 cp .env.example .env
 ```
 
-4. run the MySQL server then create a new database.
+4. Run the MySQL server in the local machine. For Docker user, the commands for running MySQL server can be checked in `commands.sh` file. Then, create a new database.
 
 ```sql
-CREATE DATABASE inventory
+CREATE DATABASE inventory;
 ```
 
 5. Run the application with this command.
