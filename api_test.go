@@ -33,7 +33,7 @@ func getItem() models.Item {
 }
 
 func cleanup(res *http.Response, req *http.Request, apiTest *apitest.APITest) {
-	if http.StatusOK == res.StatusCode {
+	if http.StatusOK == res.StatusCode || http.StatusCreated == res.StatusCode {
 		database.CleanSeeders()
 	}
 }
