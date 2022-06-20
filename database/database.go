@@ -1,6 +1,7 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/nadirbasalamah/go-simple-inventory/models"
@@ -94,4 +95,17 @@ func SeedUser() (models.User, error) {
 	fmt.Println("User seeded to the database")
 
 	return user, nil
+}
+
+func CleanSeeders() {
+	itemResult := DB.Exec("TRUNCATE items")
+	userResult := DB.Exec("TRUNCATE users")
+
+	var isFailed bool = itemResult.Error != nil || userResult.Error != nil
+
+	if isFailed {
+		panic(errors.New("error when cleaning up seeders"))
+	}
+
+	fmt.Println("Seeders are cleaned up successfully")
 }

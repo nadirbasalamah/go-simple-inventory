@@ -32,6 +32,12 @@ func getItem() models.Item {
 	return item
 }
 
+func cleanup(res *http.Response, req *http.Request, apiTest *apitest.APITest) {
+	if http.StatusOK == res.StatusCode {
+		database.CleanSeeders()
+	}
+}
+
 func getJWTToken(t *testing.T) string {
 	database.InitTestDatabase()
 	user, err := database.SeedUser()
@@ -76,6 +82,7 @@ func TestSignup_Success(t *testing.T) {
 	}
 
 	apitest.New().
+		Observe(cleanup).
 		HandlerFunc(FiberToHandlerFunc(newApp())).
 		Post("/api/v1/signup").
 		JSON(userRequest).
@@ -112,6 +119,7 @@ func TestLogin_Success(t *testing.T) {
 	}
 
 	apitest.New().
+		Observe(cleanup).
 		HandlerFunc(FiberToHandlerFunc(newApp())).
 		Post("/api/v1/login").
 		JSON(userRequest).
@@ -163,6 +171,7 @@ func TestGetItem_Success(t *testing.T) {
 	var item models.Item = getItem()
 
 	apitest.New().
+		Observe(cleanup).
 		HandlerFunc(FiberToHandlerFunc(newApp())).
 		Get("/api/v1/items/" + item.ID).
 		Expect(t).
@@ -194,6 +203,7 @@ func TestCreateItem_Success(t *testing.T) {
 	var token string = getJWTToken(t)
 
 	apitest.New().
+		Observe(cleanup).
 		HandlerFunc(FiberToHandlerFunc(newApp())).
 		Post("/api/v1/items").
 		Header("Authorization", token).
@@ -234,6 +244,7 @@ func TestUpdateItem_Success(t *testing.T) {
 	var token string = getJWTToken(t)
 
 	apitest.New().
+		Observe(cleanup).
 		HandlerFunc(FiberToHandlerFunc(newApp())).
 		Put("/api/v1/items/"+item.ID).
 		Header("Authorization", token).
