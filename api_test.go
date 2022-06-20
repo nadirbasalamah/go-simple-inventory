@@ -70,7 +70,7 @@ func getJWTToken(t *testing.T) string {
 }
 
 func TestSignup_Success(t *testing.T) {
-	userData, err := utils.CreateUserFaker()
+	userData, err := utils.CreateFaker[models.User]()
 
 	if err != nil {
 		panic(err)
@@ -189,7 +189,7 @@ func TestGetItem_NotFound(t *testing.T) {
 }
 
 func TestCreateItem_Success(t *testing.T) {
-	itemData, err := utils.CreateItemFaker()
+	itemData, err := utils.CreateFaker[models.Item]()
 	if err != nil {
 		panic(err)
 	}

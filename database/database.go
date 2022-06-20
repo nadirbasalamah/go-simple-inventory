@@ -62,7 +62,7 @@ func InitTestDatabase() {
 }
 
 func SeedItem() (models.Item, error) {
-	item, err := utils.CreateItemFaker()
+	item, err := utils.CreateFaker[models.Item]()
 	if err != nil {
 		return models.Item{}, nil
 	}
@@ -74,7 +74,7 @@ func SeedItem() (models.Item, error) {
 }
 
 func SeedUser() (models.User, error) {
-	user, err := utils.CreateUserFaker()
+	user, err := utils.CreateFaker[models.User]()
 	if err != nil {
 		return models.User{}, err
 	}
