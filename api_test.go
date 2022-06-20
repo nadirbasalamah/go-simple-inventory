@@ -22,6 +22,16 @@ func newApp() *fiber.App {
 	return app
 }
 
+func getItem() models.Item {
+	database.InitTestDatabase()
+	item, err := database.SeedItem()
+	if err != nil {
+		panic(err)
+	}
+
+	return item
+}
+
 func getJWTToken(t *testing.T) string {
 	database.InitTestDatabase()
 	user, err := database.SeedUser()
@@ -150,11 +160,7 @@ func TestGetItems_Success(t *testing.T) {
 }
 
 func TestGetItem_Success(t *testing.T) {
-	database.InitTestDatabase()
-	item, err := database.SeedItem()
-	if err != nil {
-		panic(err)
-	}
+	var item models.Item = getItem()
 
 	apitest.New().
 		HandlerFunc(FiberToHandlerFunc(newApp())).
@@ -217,11 +223,7 @@ func TestCreateItem_ValidationFailed(t *testing.T) {
 }
 
 func TestUpdateItem_Success(t *testing.T) {
-	database.InitTestDatabase()
-	item, err := database.SeedItem()
-	if err != nil {
-		panic(err)
-	}
+	var item models.Item = getItem()
 
 	var itemRequest *models.ItemRequest = &models.ItemRequest{
 		Name:     item.Name,
@@ -242,11 +244,7 @@ func TestUpdateItem_Success(t *testing.T) {
 }
 
 func TestUpdateItem_ValidationFailed(t *testing.T) {
-	database.InitTestDatabase()
-	item, err := database.SeedItem()
-	if err != nil {
-		panic(err)
-	}
+	var item models.Item = getItem()
 
 	var itemRequest *models.ItemRequest = &models.ItemRequest{
 		Name:     "",
@@ -286,11 +284,7 @@ func TestUpdateItem_Failed(t *testing.T) {
 }
 
 func TestDeleteItem_Success(t *testing.T) {
-	database.InitTestDatabase()
-	item, err := database.SeedItem()
-	if err != nil {
-		panic(err)
-	}
+	var item models.Item = getItem()
 
 	var token string = getJWTToken(t)
 
