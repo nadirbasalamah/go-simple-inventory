@@ -1,59 +1,315 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/nadirbasalamah/go-simple-inventory/database"
+	"github.com/nadirbasalamah/go-simple-inventory/models"
 	"github.com/nadirbasalamah/go-simple-inventory/routes"
+	"github.com/nadirbasalamah/go-simple-inventory/utils"
 	"github.com/steinfletcher/apitest"
-	jsonpath "github.com/steinfletcher/apitest-jsonpath"
 )
 
 func newApp() *fiber.App {
 	var app *fiber.App = fiber.New()
-	database.InitDatabase()
+	database.InitTestDatabase()
 	routes.SetupRoutes(app)
 
 	return app
 }
 
-func TestGetUser_CookieMatching(t *testing.T) {
+func getJWTToken(t *testing.T) string {
+	database.InitTestDatabase()
+	user, err := database.SeedUser()
+	if err != nil {
+		panic(err)
+	}
+
+	var userRequest *models.UserRequest = &models.UserRequest{
+		Email:    user.Email,
+		Password: user.Password,
+	}
+
+	var resp *http.Response = apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Post("/api/v1/login").
+		JSON(userRequest).
+		Expect(t).
+		Status(http.StatusOK).
+		End().Response
+
+	var response *models.Response[string] = &models.Response[string]{}
+
+	json.NewDecoder(resp.Body).Decode(&response)
+
+	var token string = response.Data
+
+	var JWT_TOKEN = "Bearer " + token
+
+	return JWT_TOKEN
+}
+
+func TestSignup_Success(t *testing.T) {
+	userData, err := utils.CreateUserFaker()
+
+	if err != nil {
+		panic(err)
+	}
+
+	var userRequest *models.UserRequest = &models.UserRequest{
+		Email:    userData.Email,
+		Password: userData.Password,
+	}
+
 	apitest.New().
 		HandlerFunc(FiberToHandlerFunc(newApp())).
-		Get("/user/1234").
+		Post("/api/v1/signup").
+		JSON(userRequest).
 		Expect(t).
-		Cookies(apitest.NewCookie("CookieForAndy").Value("Andy")).
 		Status(http.StatusOK).
 		End()
 }
 
-func TestGetUser_Success(t *testing.T) {
+func TestSignup_ValidationFailed(t *testing.T) {
+	var userRequest *models.UserRequest = &models.UserRequest{
+		Email:    "",
+		Password: "",
+	}
+
 	apitest.New().
 		HandlerFunc(FiberToHandlerFunc(newApp())).
-		Get("/user/1234").
+		Post("/api/v1/signup").
+		JSON(userRequest).
 		Expect(t).
-		Body(`{"id": "1234", "name": "Andy"}`).
+		Status(http.StatusBadRequest).
+		End()
+}
+
+func TestLogin_Success(t *testing.T) {
+	database.InitTestDatabase()
+	user, err := database.SeedUser()
+	if err != nil {
+		panic(err)
+	}
+
+	var userRequest *models.UserRequest = &models.UserRequest{
+		Email:    user.Email,
+		Password: user.Password,
+	}
+
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Post("/api/v1/login").
+		JSON(userRequest).
+		Expect(t).
 		Status(http.StatusOK).
 		End()
 }
 
-func TestGetUser_Success_JSONPath(t *testing.T) {
+func TestLogin_ValidationFailed(t *testing.T) {
+	var userRequest *models.UserRequest = &models.UserRequest{
+		Email:    "",
+		Password: "",
+	}
+
 	apitest.New().
 		HandlerFunc(FiberToHandlerFunc(newApp())).
-		Get("/user/1234").
+		Post("/api/v1/login").
+		JSON(userRequest).
 		Expect(t).
-		Assert(jsonpath.Equal(`$.id`, "1234")).
+		Status(http.StatusBadRequest).
+		End()
+}
+
+func TestLogin_Failed(t *testing.T) {
+	var userRequest *models.UserRequest = &models.UserRequest{
+		Email:    "notfound@mail.com",
+		Password: "123123",
+	}
+
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Post("/api/v1/login").
+		JSON(userRequest).
+		Expect(t).
+		Status(http.StatusInternalServerError).
+		End()
+}
+
+func TestGetItems_Success(t *testing.T) {
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Get("/api/v1/items").
+		Expect(t).
 		Status(http.StatusOK).
 		End()
 }
 
-func TestGetUser_NotFound(t *testing.T) {
+func TestGetItem_Success(t *testing.T) {
+	database.InitTestDatabase()
+	item, err := database.SeedItem()
+	if err != nil {
+		panic(err)
+	}
+
 	apitest.New().
 		HandlerFunc(FiberToHandlerFunc(newApp())).
-		Get("/user/1515").
+		Get("/api/v1/items/" + item.ID).
+		Expect(t).
+		Status(http.StatusOK).
+		End()
+}
+
+func TestGetItem_NotFound(t *testing.T) {
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Get("/api/v1/items/0").
+		Expect(t).
+		Status(http.StatusNotFound).
+		End()
+}
+
+func TestCreateItem_Success(t *testing.T) {
+	itemData, err := utils.CreateItemFaker()
+	if err != nil {
+		panic(err)
+	}
+
+	var itemRequest *models.ItemRequest = &models.ItemRequest{
+		Name:     itemData.Name,
+		Price:    itemData.Price,
+		Quantity: itemData.Quantity,
+	}
+
+	var token string = getJWTToken(t)
+
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Post("/api/v1/items").
+		Header("Authorization", token).
+		JSON(itemRequest).
+		Expect(t).
+		Status(http.StatusCreated).
+		End()
+}
+
+func TestCreateItem_ValidationFailed(t *testing.T) {
+	var itemRequest *models.ItemRequest = &models.ItemRequest{
+		Name:     "",
+		Price:    0,
+		Quantity: 0,
+	}
+
+	var token string = getJWTToken(t)
+
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Post("/api/v1/items").
+		Header("Authorization", token).
+		JSON(itemRequest).
+		Expect(t).
+		Status(http.StatusBadRequest).
+		End()
+}
+
+func TestUpdateItem_Success(t *testing.T) {
+	database.InitTestDatabase()
+	item, err := database.SeedItem()
+	if err != nil {
+		panic(err)
+	}
+
+	var itemRequest *models.ItemRequest = &models.ItemRequest{
+		Name:     item.Name,
+		Price:    item.Price,
+		Quantity: item.Quantity,
+	}
+
+	var token string = getJWTToken(t)
+
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Put("/api/v1/items/"+item.ID).
+		Header("Authorization", token).
+		JSON(itemRequest).
+		Expect(t).
+		Status(http.StatusOK).
+		End()
+}
+
+func TestUpdateItem_ValidationFailed(t *testing.T) {
+	database.InitTestDatabase()
+	item, err := database.SeedItem()
+	if err != nil {
+		panic(err)
+	}
+
+	var itemRequest *models.ItemRequest = &models.ItemRequest{
+		Name:     "",
+		Price:    0,
+		Quantity: 0,
+	}
+
+	var token string = getJWTToken(t)
+
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Put("/api/v1/items/"+item.ID).
+		Header("Authorization", token).
+		JSON(itemRequest).
+		Expect(t).
+		Status(http.StatusBadRequest).
+		End()
+}
+
+func TestUpdateItem_Failed(t *testing.T) {
+	var itemRequest *models.ItemRequest = &models.ItemRequest{
+		Name:     "changed",
+		Price:    10,
+		Quantity: 10,
+	}
+
+	var token string = getJWTToken(t)
+
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Put("/api/v1/items/0").
+		Header("Authorization", token).
+		JSON(itemRequest).
+		Expect(t).
+		Status(http.StatusNotFound).
+		End()
+}
+
+func TestDeleteItem_Success(t *testing.T) {
+	database.InitTestDatabase()
+	item, err := database.SeedItem()
+	if err != nil {
+		panic(err)
+	}
+
+	var token string = getJWTToken(t)
+
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Delete("/api/v1/items/"+item.ID).
+		Header("Authorization", token).
+		Expect(t).
+		Status(http.StatusOK).
+		End()
+}
+
+func TestDeleteItem_Failed(t *testing.T) {
+	var token string = getJWTToken(t)
+
+	apitest.New().
+		HandlerFunc(FiberToHandlerFunc(newApp())).
+		Delete("/api/v1/items/0").
+		Header("Authorization", token).
 		Expect(t).
 		Status(http.StatusNotFound).
 		End()
