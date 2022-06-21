@@ -35,6 +35,11 @@ CREATE DATABASE inventory;
 go run main.go
 ```
 
+6. Test the application with this command.
+
+```
+go test
+```
 
 ## How to Build with Docker
 
