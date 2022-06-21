@@ -12,7 +12,7 @@ import (
 func GetAllItems() []models.Item {
 	var items []models.Item = []models.Item{}
 
-	database.DB.Find(&items)
+	database.DB.Order("created_at desc").Find(&items)
 
 	return items
 }
