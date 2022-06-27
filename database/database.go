@@ -41,11 +41,11 @@ func InitDatabase() {
 func InitTestDatabase() {
 
 	var (
-		databaseUser     string = os.Getenv("DB_USER")
-		databasePassword string = os.Getenv("DB_PASSWORD")
-		databaseHost     string = os.Getenv("DB_HOST")
-		databasePort     string = os.Getenv("DB_PORT")
-		databaseName     string = os.Getenv("DB_TEST_NAME")
+		databaseUser     string = utils.GetValue("DB_USER")
+		databasePassword string = utils.GetValue("DB_PASSWORD")
+		databaseHost     string = utils.GetValue("DB_HOST")
+		databasePort     string = utils.GetValue("DB_PORT")
+		databaseName     string = utils.GetValue("DB_TEST_NAME")
 	)
 
 	var dataSource string = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", databaseUser, databasePassword, databaseHost, databasePort, databaseName)
