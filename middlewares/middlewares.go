@@ -1,15 +1,14 @@
 package middlewares
 
 import (
-	"os"
-
 	"github.com/gofiber/fiber/v2"
 	jwtMiddleware "github.com/gofiber/jwt/v3"
+	"github.com/nadirbasalamah/go-simple-inventory/utils"
 )
 
 func CreateMiddleware() func(*fiber.Ctx) error {
 	config := jwtMiddleware.Config{
-		SigningKey:   []byte(os.Getenv("JWT_SECRET_KEY")),
+		SigningKey:   []byte(utils.GetValue("JWT_SECRET_KEY")),
 		ContextKey:   "jwt",
 		ErrorHandler: jwtError,
 	}

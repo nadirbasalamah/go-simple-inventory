@@ -8,9 +8,14 @@ import (
 )
 
 func GetValue(key string) string {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file\n")
+	var isDevelop bool = os.Getenv("APP_MODE") != "production"
+
+	if isDevelop {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatalf("Error loading .env file\n")
+		}
 	}
+
 	return os.Getenv(key)
 }
