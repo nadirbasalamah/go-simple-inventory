@@ -9,21 +9,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/nadirbasalamah/go-simple-inventory/database"
 	"github.com/nadirbasalamah/go-simple-inventory/models"
-	"github.com/nadirbasalamah/go-simple-inventory/routes"
 	"github.com/nadirbasalamah/go-simple-inventory/utils"
 	"github.com/steinfletcher/apitest"
 )
 
 func newApp() *fiber.App {
-	var app *fiber.App = fiber.New()
-	database.InitTestDatabase()
-	routes.SetupRoutes(app)
+	var app *fiber.App = NewFiberApp()
+
+	database.InitDatabase(utils.GetValue("DB_TEST_NAME"))
 
 	return app
 }
 
 func getItem() models.Item {
-	database.InitTestDatabase()
+	database.InitDatabase(utils.GetValue("DB_TEST_NAME"))
 	item, err := database.SeedItem()
 	if err != nil {
 		panic(err)
@@ -39,7 +38,7 @@ func cleanup(res *http.Response, req *http.Request, apiTest *apitest.APITest) {
 }
 
 func getJWTToken(t *testing.T) string {
-	database.InitTestDatabase()
+	database.InitDatabase(utils.GetValue("DB_TEST_NAME"))
 	user, err := database.SeedUser()
 	if err != nil {
 		panic(err)
@@ -107,7 +106,7 @@ func TestSignup_ValidationFailed(t *testing.T) {
 }
 
 func TestLogin_Success(t *testing.T) {
-	database.InitTestDatabase()
+	database.InitDatabase(utils.GetValue("DB_TEST_NAME"))
 	user, err := database.SeedUser()
 	if err != nil {
 		panic(err)
